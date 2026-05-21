@@ -83,13 +83,12 @@ resource "aws_security_group" "bastion" {
   description = "Allow SSH from my IP"
   vpc_id      = aws_vpc.agricam_vpc.id # Utilise le nouveau VPC créé au-dessus
 
-  ingress {
+ingress {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["${var.my_ip}/32"]
+    cidr_blocks = [var.ip_admin] # 👈 Remplace TOUTE la ligne par ça !
   }
-
   egress {
     from_port   = 0
     to_port     = 0
