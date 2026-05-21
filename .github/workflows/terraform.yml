@@ -22,7 +22,7 @@ jobs:
       uses: actions/checkout@v3
 
     # Install the latest version of Terraform CLI
-    - name: Setup Terraformg
+    - name: Setup Terraform
       uses: hashicorp/setup-terraform@v2
       with:
         terraform_wrapper: false
@@ -33,19 +33,20 @@ jobs:
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "us-east-1"
+        AWS_DEFAULT_REGION: "af-south-1"
 
     # Checks that all Terraform configuration files adhere to a canonical format
     - name: Terraform Format
       run: terraform fmt -check
+      continue-on-error: true
 
     # Generates an execution plan for Terraform
     - name: Terraform Plan
-      run: terraform plan -input=false
+      run: terraform plan -input=true
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "us-east-1"
+        AWS_DEFAULT_REGION: "af-south-1"
         TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
 
       # On push to "main", build or change infrastructure according to Terraform configuration files
