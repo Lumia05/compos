@@ -1,61 +1,54 @@
-name: 'Terraform CI/CD'
+name: "Terraform CI/CD Pipeline"
 
 on:
   push:
     branches:
       - main
   pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
 
 jobs:
   terraform:
-    name: 'Terraform'
+    name: "Terraform Plan"
     runs-on: ubuntu-latest
     
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
+    # 💡 C'est ici qu'on dit à GitHub de travailler dans le sous-dossier dev
     defaults:
       run:
-        shell: bash
+        working-directory: ./environnements/dev
 
     steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    # Install the latest version of Terraform CLI
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v2
-      with:
-        terraform_wrapper: false
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0" # ou la version installée sur ta WSL
 
-    # Initialize a new or existing Terraform working directory
-    - name: Terraform Init
-      run: terraform init
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "af-south-1"
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: "af-south-1"
 
-    # Checks that all Terraform configuration files adhere to a canonical format
-    - name: Terraform Format
-      run: terraform fmt -check
-      continue-on-error: true
+      - name: Terraform Format Check
+        run: terraform fmt -check
 
-    # Generates an execution plan for Terraform
-    - name: Terraform Plan
-      run: terraform plan -input=true
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: "af-south-1"
-        TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+      - name: Terraform Init
+        run: terraform init
 
-      # On push to "main", build or change infrastructure according to Terraform configuration files
-      # Note: uncomment to apply automatically
-      # - name: Terraform Apply
-      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      #   run: terraform apply -auto-approve -input=false
-      #   env:
-      #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     AWS_DEFAULT_REGION: "us-east-1"
-      #     TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        env:
+          TF_VAR_db_password: ${{ secrets.TF_VAR_DB_PASSWORD }}
+          TF_VAR_my_ip: ${{ secrets.TF_VAR_MY_IP }}
+          TF_VAR_key_name: ${{ secrets.TF_VAR_KEY_NAME }}
+        run: terraform plan -input=false
