@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  erp-backend:
+    build: ./erp-backend
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    networks:
+      - digitrans-network
+
+  crm-backend:
+    build: ./crm-backend
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    networks:
+      - digitrans-network
+
+  supply-chain-backend:
+    build: ./supply-chain-backend
+    ports:
+      - "3003:3003"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    networks:
+      - digitrans-network
+
+  bi-backend:
+    build: ./bi-backend
+    ports:
+      - "3004:3004"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - redis
+    networks:
+      - digitrans-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - digitrans-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - digitrans-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - digitrans-network
+
+networks:
+  digitrans-network:
+    driver: bridge

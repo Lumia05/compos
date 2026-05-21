@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+
+scrape_configs:
+  - job_name: 'digitrans-services'
+    static_configs:
+      - targets: 
+        - 'erp-backend:3001'
+        - 'crm-backend:3002'
+        - 'supply-chain-backend:3003'
+        - 'bi-backend:3004'
